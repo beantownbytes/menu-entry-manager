@@ -1,5 +1,4 @@
 use glib::Propagation;
-use gtk::prelude::*;
 use gtk4 as gtk;
 use libadwaita as adw;
 use libadwaita::prelude::*;
@@ -169,7 +168,7 @@ impl DesktopFileManagerWindow {
             &save_button,
             &delete_button,
             &categories_popover,
-            &categories_checkboxes,
+            &categories_checkboxes[..],
             &categories_custom_entry,
             &categories_visible_entry,
             &search_entry,
@@ -309,6 +308,7 @@ impl DesktopFileManagerWindow {
         (panel, new_button, search_entry)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn create_right_panel(
         name_entry: &gtk::Entry,
         exec_entry: &gtk::Entry,
@@ -461,6 +461,8 @@ impl DesktopFileManagerWindow {
         (panel, save_button, delete_button, categories_visible_entry)
     }
 
+    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::needless_borrows_for_generic_args)]
     fn connect_signals(
         _window: &adw::ApplicationWindow,
         current_file: &Rc<RefCell<Option<DesktopFile>>>,
@@ -547,30 +549,30 @@ impl DesktopFileManagerWindow {
                     if let Some(path) = path_opt {
                         // Save to existing file
                         if let Err(e) = file.save(&path) {
-                            eprintln!("Error saving file: {}", e);
+                            eprintln!("Error saving file: {e}");
                         } else {
-                            println!("File saved successfully to: {}", path);
+                            println!("File saved successfully to: {path}");
                             // Refresh the file list to show updated categories
                             Self::load_desktop_files(&file_list);
                         }
                     } else {
                         // Save as new file
-                        if let Some(home) = env::var("HOME").ok() {
-                            let user_apps = format!("{}/.local/share/applications", home);
+                        if let Ok(home) = env::var("HOME") {
+                            let user_apps = format!("{home}/.local/share/applications");
                             let filename = format!(
                                 "{}.desktop",
                                 file.desktop_entry.name.replace(" ", "-").to_lowercase()
                             );
-                            let full_path = format!("{}/{}", user_apps, filename);
+                            let full_path = format!("{user_apps}/{filename}");
                             // Create directory if it doesn't exist
                             if let Err(e) = std::fs::create_dir_all(&user_apps) {
-                                eprintln!("Error creating directory: {}", e);
+                                eprintln!("Error creating directory: {e}");
                                 return;
                             }
                             if let Err(e) = file.save(&full_path) {
-                                eprintln!("Error saving file: {}", e);
+                                eprintln!("Error saving file: {e}");
                             } else {
-                                println!("File saved successfully to: {}", full_path);
+                                println!("File saved successfully to: {full_path}");
                                 *file_path.borrow_mut() = Some(full_path);
                                 // Refresh the file list to show the new file
                                 Self::load_desktop_files(&file_list);
@@ -615,9 +617,9 @@ impl DesktopFileManagerWindow {
                         }
 
                         if let Some(child) = row.child() {
-                            if let Some(box_widget) = child.downcast::<gtk::Box>().ok() {
+                            if let Ok(box_widget) = child.downcast::<gtk::Box>() {
                                 if let Some(icon) = box_widget.first_child() {
-                                    if let Some(icon_widget) = icon.downcast::<gtk::Image>().ok() {
+                                    if let Ok(icon_widget) = icon.downcast::<gtk::Image>() {
                                         if new_expanded {
                                             icon_widget
                                                 .set_from_icon_name(Some("pan-down-symbolic"));
@@ -689,12 +691,12 @@ impl DesktopFileManagerWindow {
                             .message_type(gtk::MessageType::Warning)
                             .buttons(gtk::ButtonsType::OkCancel)
                             .text("Delete Desktop File?")
-                            .secondary_text(&format!("Are you sure you want to delete this file?\n{}", path))
+                            .secondary_text(&format!("Are you sure you want to delete this file?\n{path}"))
                             .build();
                         dialog.connect_response(glib::clone!(@weak delete_button, @weak current_file, @weak file_path, @weak file_list => move |dialog, response| {
                             if response == gtk::ResponseType::Ok {
                                 if let Err(e) = std::fs::remove_file(&path) {
-                                    eprintln!("Error deleting file: {}", e);
+                                    eprintln!("Error deleting file: {e}");
                                 } else {
                                     *current_file.borrow_mut() = None;
                                     *file_path.borrow_mut() = None;
@@ -894,14 +896,14 @@ impl DesktopFileManagerWindow {
                     return;
                 }
                 let text = entry.text();
-                println!("Categories changed to: '{}'", text);
+                println!("Categories changed to: '{text}'");
                 if let Some(ref mut file) = *current_file.borrow_mut() {
                     if text.is_empty() {
                         file.desktop_entry.categories = None;
                         println!("Categories cleared");
                     } else {
                         file.desktop_entry.categories = Some(text.to_string());
-                        println!("Categories set to: '{}'", text);
+                        println!("Categories set to: '{text}'");
                     }
                 } else {
                     println!("No current file to update");
@@ -925,6 +927,7 @@ impl DesktopFileManagerWindow {
             let categories_visible_entry = categories_visible_entry.clone();
             let categories_checkboxes = categories_checkboxes.to_vec();
 
+            #[allow(clippy::unused_enumerate_index)]
             for (_i, checkbox) in categories_checkboxes.iter().enumerate() {
                 let checkbox = checkbox.clone();
                 let current_file = current_file.clone();
@@ -959,6 +962,9 @@ impl DesktopFileManagerWindow {
         }
     }
 
+    #[allow(clippy::needless_borrow)]
+    #[allow(clippy::unused_enumerate_index)]
+    #[allow(clippy::unwrap_or_default)]
     fn load_desktop_files(list: &gtk::ListBox) {
         while let Some(child) = list.first_child() {
             list.remove(&child);
@@ -1058,6 +1064,8 @@ impl DesktopFileManagerWindow {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::needless_borrow)]
     fn load_desktop_file(
         current_file: &Rc<RefCell<Option<DesktopFile>>>,
         file_path: &Rc<RefCell<Option<String>>>,
@@ -1100,11 +1108,11 @@ impl DesktopFileManagerWindow {
                                     url_entry,
                                     mime_type_entry,
                                     categories_visible_entry,
-                                    &categories_checkboxes,
+                                    categories_checkboxes,
                                 );
                             }
                             Err(e) => {
-                                eprintln!("Error loading desktop file: {}", e);
+                                eprintln!("Error loading desktop file: {e}");
                             }
                         }
                         break;
@@ -1114,6 +1122,8 @@ impl DesktopFileManagerWindow {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::needless_borrow)]
     fn update_ui_fields(
         file: &DesktopFile,
         name_entry: &gtk::Entry,
@@ -1219,13 +1229,13 @@ impl DesktopFileManagerWindow {
         let mut row = list.first_child();
         while let Some(child) = row {
             let next_sibling = child.next_sibling();
-            if let Some(list_row) = child.downcast::<gtk::ListBoxRow>().ok() {
+            if let Ok(list_row) = child.downcast::<gtk::ListBoxRow>() {
                 if list_row.has_css_class("file-item") {
                     // For file items, check if the filename matches
                     if let Some(child) = list_row.child() {
-                        if let Some(box_widget) = child.downcast::<gtk::Box>().ok() {
+                        if let Ok(box_widget) = child.downcast::<gtk::Box>() {
                             if let Some(label) = box_widget.first_child() {
-                                if let Some(label_widget) = label.downcast::<gtk::Label>().ok() {
+                                if let Ok(label_widget) = label.downcast::<gtk::Label>() {
                                     let file_name = label_widget.text().to_lowercase();
                                     let should_show =
                                         search_text.is_empty() || file_name.contains(search_text);

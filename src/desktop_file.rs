@@ -166,6 +166,7 @@ impl DesktopFile {
         })
     }
 
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         let mut content = String::new();
         content.push_str("[Desktop Entry]\n");
@@ -174,22 +175,22 @@ impl DesktopFile {
         content.push_str(&format!("Name={}\n", self.desktop_entry.name));
 
         if let Some(ref version) = self.desktop_entry.version {
-            content.push_str(&format!("Version={}\n", version));
+            content.push_str(&format!("Version={version}\n"));
         }
         if let Some(ref generic_name) = self.desktop_entry.generic_name {
-            content.push_str(&format!("GenericName={}\n", generic_name));
+            content.push_str(&format!("GenericName={generic_name}\n"));
         }
         if let Some(ref comment) = self.desktop_entry.comment {
-            content.push_str(&format!("Comment={}\n", comment));
+            content.push_str(&format!("Comment={comment}\n"));
         }
         if let Some(ref icon) = self.desktop_entry.icon {
-            content.push_str(&format!("Icon={}\n", icon));
+            content.push_str(&format!("Icon={icon}\n"));
         }
         if let Some(ref exec) = self.desktop_entry.exec {
-            content.push_str(&format!("Exec={}\n", exec));
+            content.push_str(&format!("Exec={exec}\n"));
         }
         if let Some(ref path) = self.desktop_entry.path {
-            content.push_str(&format!("Path={}\n", path));
+            content.push_str(&format!("Path={path}\n"));
         }
         if let Some(terminal) = self.desktop_entry.terminal {
             content.push_str(&format!(
@@ -198,19 +199,19 @@ impl DesktopFile {
             ));
         }
         if let Some(ref categories) = self.desktop_entry.categories {
-            content.push_str(&format!("Categories={}\n", categories));
+            content.push_str(&format!("Categories={categories}\n"));
         }
         if let Some(ref keywords) = self.desktop_entry.keywords {
-            content.push_str(&format!("Keywords={}\n", keywords));
+            content.push_str(&format!("Keywords={keywords}\n"));
         }
         if let Some(ref startup_wm_class) = self.desktop_entry.startup_wm_class {
-            content.push_str(&format!("StartupWMClass={}\n", startup_wm_class));
+            content.push_str(&format!("StartupWMClass={startup_wm_class}\n"));
         }
         if let Some(ref url) = self.desktop_entry.url {
-            content.push_str(&format!("URL={}\n", url));
+            content.push_str(&format!("URL={url}\n"));
         }
         if let Some(ref mime_type) = self.desktop_entry.mime_type {
-            content.push_str(&format!("MimeType={}\n", mime_type));
+            content.push_str(&format!("MimeType={mime_type}\n"));
         }
         if let Some(hidden) = self.desktop_entry.hidden {
             content.push_str(&format!(
@@ -219,10 +220,10 @@ impl DesktopFile {
             ));
         }
         if let Some(ref only_show_in) = self.desktop_entry.only_show_in {
-            content.push_str(&format!("OnlyShowIn={}\n", only_show_in));
+            content.push_str(&format!("OnlyShowIn={only_show_in}\n"));
         }
         if let Some(ref not_show_in) = self.desktop_entry.not_show_in {
-            content.push_str(&format!("NotShowIn={}\n", not_show_in));
+            content.push_str(&format!("NotShowIn={not_show_in}\n"));
         }
         if let Some(dbus_activatable) = self.desktop_entry.dbus_activatable {
             content.push_str(&format!(
@@ -231,10 +232,10 @@ impl DesktopFile {
             ));
         }
         if let Some(ref try_exec) = self.desktop_entry.try_exec {
-            content.push_str(&format!("TryExec={}\n", try_exec));
+            content.push_str(&format!("TryExec={try_exec}\n"));
         }
         if let Some(ref actions) = self.desktop_entry.actions {
-            content.push_str(&format!("Actions={}\n", actions));
+            content.push_str(&format!("Actions={actions}\n"));
         }
 
         content
@@ -288,7 +289,7 @@ pub fn get_desktop_file_paths() -> Vec<String> {
     }
 
     if let Ok(home) = env::var("HOME") {
-        let user_apps = format!("{}/.local/share/applications", home);
+        let user_apps = format!("{home}/.local/share/applications");
         if let Ok(entries) = fs::read_dir(user_apps) {
             for entry in entries.flatten() {
                 if let Some(ext) = entry.path().extension() {

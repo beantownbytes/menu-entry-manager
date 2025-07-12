@@ -99,7 +99,7 @@ jobs:
         tar -czf release/menu-entry-manager-linux-x86_64.tar.gz -C release menu-entry-manager
 
     - name: Upload release assets
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: release-assets
         path: release/ 

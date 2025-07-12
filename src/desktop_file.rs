@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 use std::fs;
 use std::path::Path;
-use std::env;
 
 #[derive(Debug, thiserror::Error)]
 pub enum DesktopFileError {
@@ -109,21 +109,21 @@ impl DesktopFile {
 
         for line in lines {
             let line = line.trim();
-            
+
             if line.is_empty() || line.starts_with('#') {
                 continue;
             }
 
             if line.starts_with('[') && line.ends_with(']') {
-                current_section = Some(line[1..line.len()-1].to_string());
+                current_section = Some(line[1..line.len() - 1].to_string());
                 continue;
             }
 
             if let Some(section) = &current_section {
                 if let Some(pos) = line.find('=') {
                     let key = line[..pos].trim();
-                    let value = line[pos+1..].trim();
-                    
+                    let value = line[pos + 1..].trim();
+
                     if section == "Desktop Entry" {
                         desktop_entry.insert(key.to_string(), value.to_string());
                     }
@@ -132,9 +132,15 @@ impl DesktopFile {
         }
 
         let entry = DesktopEntry {
-            entry_type: desktop_entry.get("Type").cloned().unwrap_or_else(|| "Application".to_string()),
+            entry_type: desktop_entry
+                .get("Type")
+                .cloned()
+                .unwrap_or_else(|| "Application".to_string()),
             version: desktop_entry.get("Version").cloned(),
-            name: desktop_entry.get("Name").cloned().ok_or_else(|| DesktopFileError::MissingField("Name".to_string()))?,
+            name: desktop_entry
+                .get("Name")
+                .cloned()
+                .ok_or_else(|| DesktopFileError::MissingField("Name".to_string()))?,
             generic_name: desktop_entry.get("GenericName").cloned(),
             comment: desktop_entry.get("Comment").cloned(),
             icon: desktop_entry.get("Icon").cloned(),
@@ -163,10 +169,10 @@ impl DesktopFile {
     pub fn to_string(&self) -> String {
         let mut content = String::new();
         content.push_str("[Desktop Entry]\n");
-        
+
         content.push_str(&format!("Type={}\n", self.desktop_entry.entry_type));
         content.push_str(&format!("Name={}\n", self.desktop_entry.name));
-        
+
         if let Some(ref version) = self.desktop_entry.version {
             content.push_str(&format!("Version={}\n", version));
         }
@@ -186,7 +192,10 @@ impl DesktopFile {
             content.push_str(&format!("Path={}\n", path));
         }
         if let Some(terminal) = self.desktop_entry.terminal {
-            content.push_str(&format!("Terminal={}\n", if terminal { "true" } else { "false" }));
+            content.push_str(&format!(
+                "Terminal={}\n",
+                if terminal { "true" } else { "false" }
+            ));
         }
         if let Some(ref categories) = self.desktop_entry.categories {
             content.push_str(&format!("Categories={}\n", categories));
@@ -204,7 +213,10 @@ impl DesktopFile {
             content.push_str(&format!("MimeType={}\n", mime_type));
         }
         if let Some(hidden) = self.desktop_entry.hidden {
-            content.push_str(&format!("Hidden={}\n", if hidden { "true" } else { "false" }));
+            content.push_str(&format!(
+                "Hidden={}\n",
+                if hidden { "true" } else { "false" }
+            ));
         }
         if let Some(ref only_show_in) = self.desktop_entry.only_show_in {
             content.push_str(&format!("OnlyShowIn={}\n", only_show_in));
@@ -213,7 +225,10 @@ impl DesktopFile {
             content.push_str(&format!("NotShowIn={}\n", not_show_in));
         }
         if let Some(dbus_activatable) = self.desktop_entry.dbus_activatable {
-            content.push_str(&format!("DBusActivatable={}\n", if dbus_activatable { "true" } else { "false" }));
+            content.push_str(&format!(
+                "DBusActivatable={}\n",
+                if dbus_activatable { "true" } else { "false" }
+            ));
         }
         if let Some(ref try_exec) = self.desktop_entry.try_exec {
             content.push_str(&format!("TryExec={}\n", try_exec));
@@ -238,8 +253,13 @@ impl DesktopFile {
         }
 
         match self.desktop_entry.entry_type.as_str() {
-            "Application" | "Link" | "Directory" => {},
-            _ => return Err(DesktopFileError::InvalidValue("Type".to_string(), self.desktop_entry.entry_type.clone())),
+            "Application" | "Link" | "Directory" => {}
+            _ => {
+                return Err(DesktopFileError::InvalidValue(
+                    "Type".to_string(),
+                    self.desktop_entry.entry_type.clone(),
+                ))
+            }
         }
 
         if self.desktop_entry.entry_type == "Application" && self.desktop_entry.exec.is_none() {
@@ -256,7 +276,7 @@ impl DesktopFile {
 
 pub fn get_desktop_file_paths() -> Vec<String> {
     let mut paths = Vec::new();
-    
+
     if let Ok(entries) = fs::read_dir("/usr/share/applications") {
         for entry in entries.flatten() {
             if let Some(ext) = entry.path().extension() {
@@ -266,7 +286,7 @@ pub fn get_desktop_file_paths() -> Vec<String> {
             }
         }
     }
-    
+
     if let Ok(home) = env::var("HOME") {
         let user_apps = format!("{}/.local/share/applications", home);
         if let Ok(entries) = fs::read_dir(user_apps) {
@@ -279,6 +299,6 @@ pub fn get_desktop_file_paths() -> Vec<String> {
             }
         }
     }
-    
+
     paths
-} 
+}

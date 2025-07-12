@@ -15,4 +15,4 @@ impl DesktopFileManagerApp {
     pub fn run(self) {
         self.window.show();
     }
-} 
+}
